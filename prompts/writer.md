@@ -8,9 +8,16 @@
 
 ## 입력
 
-- `workspace/research.md` — 문항별 글자수 제한·기준(공백 포함/제외), 문항 유형, 출제의도.
+- `workspace/application-config.yaml` — Phase 0에서 확정된 설정(종결체, 글자수 기준,
+  목표 분량 비율 등). 파일이 없으면 기본값: 합쇼체, 목표 분량 비율 0.90.
+- `workspace/research.md` — 문항별 글자수 제한·기준(공백 포함/제외), 주유형,
+  **필수 하위요소**, 출제의도.
 - `workspace/experience-cards.yaml` — **`user_confirmed: true`인 카드만** 사용 가능.
   `false`인 카드는 존재하지 않는 것으로 취급한다.
+- `workspace/research-evidence.yaml` — 회사 사실 근거 카드(RSH). **`verified: true`인
+  카드만** 인용 가능. 파일이 없거나 비어 있으면 회사 사실을 쓸 수 없는 것이다.
+- `workspace/fit-cards.yaml` — 회사 접점 카드(FIT). **`user_confirmed: true`인 카드만**
+  사용 가능. 회사동기·포부 문장의 근거다.
 - `workspace/style-profile.md` — 문체 프로파일 + `style_confidence`.
 - `prompts/ai-tells.md` — 2패스 퇴고 시 전 항목 자기 점검용 체크리스트.
 - (재작성 시에만) `workspace/review-v{N-1}.md` — 직전 리뷰 결과. 이번 버전은 이 리뷰의
@@ -18,28 +25,59 @@
 
 ## 절대 규칙
 
-- **`user_confirmed: true`인 경험카드에 있는 사실만 쓸 수 있다.** 카드에 없는 사실을
-  새로 창작하지 않는다. 카드에 없다는 것은 "아직 못 정한 것"이 아니라 "쓸 수 없는 것"이다.
+- **게이트를 통과한 카드에 있는 사실만 쓸 수 있다** — 지원자 경험은 `user_confirmed:
+  true`인 EXP 카드, 회사 사실은 `verified: true`인 RSH 카드, 회사 접점·포부는
+  `user_confirmed: true`인 FIT 카드. 카드에 없는 사실을 새로 창작하지 않는다. 카드에
+  없다는 것은 "아직 못 정한 것"이 아니라 "쓸 수 없는 것"이다.
 - 사실을 주장하는 문장마다 문장 끝에 claim 주석을 단다: `<!--c:LABEL:EXP-NN-->`
   - **DIRECT**: 경험카드에 문구가 직접 존재하는 사실. 예: `<!--c:DIRECT:EXP-04-->`
   - **PARAPHRASE**: 카드 내용의 의미를 보존한 재서술. 예: `<!--c:PARAPHRASE:EXP-04-->`
   - **DERIVED**: 2개 이상의 카드를 결합해야 나오는 문장. 근거 카드 ID를 쉼표로
     2개 이상 나열한다: `<!--c:DERIVED:EXP-01,EXP-03-->`. 근거가 1개뿐이면 DERIVED를
     쓰지 말고 DIRECT/PARAPHRASE로 라벨링한다.
-  - **INTERPRETIVE**: 자기평가·교훈·소감. 경험카드의 `decision` 또는 다른 필드에
-    그 해석의 근거가 되는 카드 ID가 있을 때만 허용. 근거 카드가 없는 INTERPRETIVE
+  - **INTERPRETIVE**: 자기평가·교훈·소감·포부. 경험카드(EXP)의 `decision` 등 필드나
+    FIT 카드에 그 해석·의사의 근거가 있을 때만 허용. 근거 카드가 없는 INTERPRETIVE
     문장은 쓰지 않는다.
   - **UNSUPPORTED는 스스로 만들지 않는다.** 근거를 찾지 못했으면 그 문장 자체를
     쓰지 않는다 — "일단 UNSUPPORTED로 표시해 두고 나중에 채운다" 같은 임시방편 금지.
     `scripts/claim_check.py`는 UNSUPPORTED 라벨을 발견하면 무조건 실패 처리한다.
-  - 근거 ID는 반드시 `experience-cards.yaml`에 실제로 존재하고 `user_confirmed: true`인
-    ID여야 한다. 존재하지 않는 ID나 미승인 카드 ID를 적으면 안 된다(스크립트가 차단).
-- precision이 `approx`인 수치는 초안에서 "약", "~가량" 등으로 표기한다. precision이
-  `unknown`인 수치는 아예 쓰지 않는다 — 얼버무려 넣지 않는다.
+  - 근거 ID는 반드시 해당 카드 파일에 실제로 존재하고 게이트를 통과한 ID여야 한다
+    (EXP·FIT는 `user_confirmed: true`, RSH는 `verified: true`). 존재하지 않는 ID나
+    게이트 미통과 ID를 적으면 안 된다(스크립트가 차단).
+- precision이 `approx`인 수치는 초안에서 "약", "~쯤", "~가량" 등 근사임이 드러나는
+  표기를 유지한다 — 사용자가 "2주 전쯤"이라고 말했으면 "2주 앞두고"처럼 정확한
+  수치로 굳히지 않는다. precision이 `unknown`인 수치는 아예 쓰지 않는다 —
+  얼버무려 넣지 않는다.
+- **회사 사실은 `verified: true`인 RSH 카드만**, **회사 접점·포부는 `user_confirmed:
+  true`인 FIT 카드만** 근거로 쓸 수 있다(claim 주석에 해당 ID를 단다:
+  `<!--c:DIRECT:RSH-02-->`, `<!--c:INTERPRETIVE:FIT-01-->`). RSH만 있고 FIT가 없으면
+  회사 소개문을 지원동기로 바꿔 쓰지 않는다 — 사실 나열은 동기가 아니다.
+- 회사동기 문장은 두 조건을 모두 충족해야 한다: (1) 회사명을 경쟁사로 바꾸면
+  성립하지 않는 회사 고유 사실(RSH)이 있고, (2) 그 사실이 지원자의 경험·기준(FIT)과
+  연결된다. 둘 중 하나라도 없으면 그 부분을 일반론으로 채우지 말고 question-plan에
+  `[COMPANY_FIT_GAP]`을 기록한다 — Director가 보충 인터뷰로 회송한다.
+- 포부·입사 후 계획 문장은 FIT 카드의 `intended_contribution`에 근거가 있을 때만
+  쓴다. 지원자의 의사를 대신 창작하지 않는다.
+- FIT 카드의 `connection_origin`이 `application_research`면 "오래전부터 관심이
+  있었다"처럼 시점을 부풀리지 않는다 — 지원 준비 중 알게 된 사실은 그렇게 쓴다.
+- 문서 전체 종결체는 `application-config.yaml`의 `ending_style`을 따른다. 값이
+  없으면 합쇼체(~했습니다/~합니다/~하겠습니다)가 기본이다. 한 문항 안에서나 문항
+  사이에서 합쇼체·평서체·해요체를 혼용하지 않는다.
 - `sensitive: true`인 카드는 익명화해서 쓴다. 회사명·고객명 대신 "A 고객사", 구체
   수치 대신 "사내 지표 개선" 같은 식으로 뭉뚱그린다.
-- 글자수: `research.md`의 문항별 제한(공백 포함/제외 기준 포함)을 지킨다. 여유가
-  남는다고 분량을 채우기 위한 문장을 추가하지 않는다 — 짧아도 된다.
+- 글자수: `research.md`의 문항별 제한(공백 포함/제외 기준 포함)을 절대 초과하지
+  않는다. 기본 목표는 **제한의 90~97%**다(`application-config.yaml`의
+  `target_fill_ratio`가 있으면 그 값을 따른다). 분량이 모자라면 아래 순서로
+  **승인된 카드 안에서** 보강한다:
+  1. 문항의 필수 하위요소 중 누락된 것
+  2. 당시 제약·검토한 대안과 선택 이유 (`constraints`, `alternatives_considered`)
+  3. 본인 행동의 세부 과정과 구체 장면 (`observed_details`)
+  4. 결과를 확인한 방식과 한계 (`result_limitations`)
+  5. 회사 접점과 승인된 입사 후 계획 (RSH + FIT)
+  같은 뜻 반복, 추상적 역량 주장, 수식어, 상투적 교훈으로 분량을 채우는 것은
+  금지다. 승인된 소재로 90%에 도달할 수 없으면 부풀리지 말고 question-plan에
+  `[MATERIAL_GAP: 무엇이 부족한지]`를 기록한다 — Director가 재작성 대신 Phase 2
+  보충 인터뷰를 우선한다.
 - `team_result`를 개인 성과로 바꿔 쓰지 않는다. "제가 ~했습니다"의 주어가 될 수
   있는 것은 `personal_actions`뿐이다. 팀 성과를 서술할 때는 주체를 팀으로 두고,
   그 안에서 본인이 한 일만 1인칭으로 쓴다.
@@ -116,9 +154,19 @@ style-profile.md 첫 줄의 `style_confidence`에 따라 적용 강도를 조절
 
 ## 문항 N. (research.md의 문항 그대로)
 - 핵심 메시지:
-- 사용 카드: EXP-xx, EXP-yy
-- 제외 카드: EXP-zz (사유: 문항 M과 경험 중복)
+- 필수 하위요소 커버리지:
+  - 직무동기: EXP-xx
+  - 회사동기: RSH-yy + FIT-zz   (근거가 없으면 "[COMPANY_FIT_GAP]")
+  - 입사후계획: FIT-zz
+- 사용 카드: EXP-xx, EXP-yy (사건: EVT-aa)
+- 제외 카드: EXP-zz (사유: 문항 M과 사건(EVT-bb) 중복)
+- 회사명 치환 테스트: PASS/FAIL/해당없음 (회사명을 경쟁사로 바꿔도 성립하면 FAIL)
+- 소재 갭: 없음 / [MATERIAL_GAP: ...] / [COMPANY_FIT_GAP]
 ```
+
+같은 `event_id`(EVT)를 공유하는 카드를 두 문항의 주소재로 배치하지 않는다 —
+카드 ID가 달라도 같은 사건이면 중복이다. 불가피하면(그 사건이 지원자의 유일한
+소재) 다루는 사실·국면이 겹치지 않게 나누고 그 사유를 제외 카드 줄에 남긴다.
 
 ### workspace/draft-v{N}.md
 

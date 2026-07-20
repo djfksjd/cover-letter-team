@@ -10,13 +10,15 @@
    직접 7단계 인터뷰(범위 안내 → 자유 회상 → 경험카드 구조화 → 공고·문항 매핑 →
    갭 인터뷰 → 검증 질문 → 사용자 게이트)를 진행해, 지원자 본인도 미처 정리하지
    못했던 경험을 함께 구조화합니다.
-2. **경험카드·claim-map으로 날조 차단** — 인터뷰에서 확정한 경험은 `experience-cards.yaml`로
-   고정되고, 사용자가 승인(`user_confirmed: true`)한 카드만 채택됩니다. Writer가
-   쓰는 모든 문장은 `<!--c:LABEL:EXP-NN-->` 형식의 claim 주석으로 경험카드에 연결되며,
-   `claim_check.py`가 claim 주석이 달린 모든 주장의 근거 무결성을 기계 검증합니다
-   (주석 자체가 누락되지 않았는지는 Reviewer가 검증 3에서 직접 확인합니다).
+2. **3종 카드·claim-map으로 날조 차단** — 지원자 경험은 `experience-cards.yaml`(EXP,
+   사용자 승인), 회사 사실은 `research-evidence.yaml`(RSH, 출처 검증), 회사 접점·포부는
+   `fit-cards.yaml`(FIT, 사용자 승인)로 고정됩니다. Writer가 쓰는 모든 문장은
+   `<!--c:LABEL:EXP-NN-->` 형식의 claim 주석으로 카드에 연결되며, `claim_check.py`가
+   claim 주석이 달린 모든 주장의 근거 무결성을 기계 검증합니다 (주석 자체가 누락되지
+   않았는지는 Reviewer가 검증 3에서 직접 확인합니다). "왜 이 회사인가"조차 검증된
+   회사 사실 + 사용자가 실제로 말한 접점 없이는 쓸 수 없습니다.
 3. **2계층 AI 티 검증 + 문체 신뢰도** — 표면적 AI 말투(surface_check.py)와 내용
-   신호(리뷰어의 3중 검증: AI 티 / 인사담당자 페르소나 / 근거 검증) 두 계층으로
+   신호(리뷰어의 4중 검증: AI 티 / 인사담당자 페르소나 / 근거 검증 / 제출 준비도) 두 계층으로
    점검합니다. 동시에 Style Analyst가 사용자의 문체 샘플을 분석해 `style_confidence`를
    명시한 `style-profile.md`를 만들어, 반영된 문체가 지원자 본인의 것인지 신뢰도를
    함께 보고합니다.
@@ -41,8 +43,10 @@ ln -s "$(pwd)/cover-letter-team" ~/.claude/skills/cover-letter-team
 <회사명>_<직무>_<시기>/
 ├── assets/       ← 이력서, 경험 정리, 문체 샘플 (선택)
 ├── job/          ← 공고 URL(url.md) 또는 문항 텍스트 (필수)
-├── workspace/    ← 중간 산출물 (research.md, interview.md, experience-cards.yaml,
-│                    style-profile.md, question-plan.md, draft-v{N}.md, review-v{N}.md)
+├── workspace/    ← 중간 산출물 (application-config.yaml, research.md,
+│                    research-evidence.yaml, interview.md, experience-cards.yaml,
+│                    fit-cards.yaml, style-profile.md, question-plan.md,
+│                    draft-v{N}.md, review-v{N}.md)
 └── output/       ← 최종 자소서 (*.md + *.docx)
 ```
 
@@ -54,12 +58,12 @@ workspace output`을 실행합니다. `examples/sample-project`에 가상 인물
 
 | Phase | 담당 | 내용 |
 |---|---|---|
-| 0. 입력 분석 | Director | `job/`·`assets/` 스캔, 문체 모드·글자수 기준·블라인드 여부 확인 |
-| 1. Researcher | 서브에이전트 | 공고 원문 확보 → `research.md` |
-| 2. 심층 인터뷰 | Director (직접) | 7단계 대화형 인터뷰 → `interview.md`, `experience-cards.yaml` — **사용자 게이트 ①: 경험카드 승인** |
+| 0. 입력 분석 | Director | `job/`·`assets/` 스캔, 문체 모드·종결체·글자수 기준·블라인드 여부 확인 → `application-config.yaml` |
+| 1. Researcher | 서브에이전트 | 공고 원문 확보 + 회사 사실 근거화 → `research.md`, `research-evidence.yaml` |
+| 2. 심층 인터뷰 | Director (직접) | 7단계 대화형 인터뷰 + 회사 접점 인터뷰 → `interview.md`, `experience-cards.yaml`, `fit-cards.yaml` — **사용자 게이트 ①: 카드 승인** |
 | 3. Style Analyst | 서브에이전트 | 문체 샘플 분석 → `style-profile.md` (`style_confidence` 명시) |
-| 4. Writer | 서브에이전트 | 승인된 경험카드 기준 초안 작성 → `question-plan.md`, `draft-v{N}.md` |
-| 5. Director Review | Director | 결정적 스크립트(표면/중복/근거/글자수/블라인드) + 3중 검증 → `review-v{N}.md`, HIGH 0개까지 최대 3루프 재작성 |
+| 4. Writer | 서브에이전트 | 승인된 카드 기준 초안 작성 (분량 목표: 제한의 90~97%) → `question-plan.md`, `draft-v{N}.md` |
+| 5. Director Review | Director | 결정적 스크립트(표면/중복/근거/글자수/블라인드) + 4중 검증(AI 티/인사담당자/근거/제출 준비도) → `review-v{N}.md`, 안전성·제출 준비도 모두 PASS까지 최대 3루프 |
 | 6. 산출 | Director | `.docx` 변환, claim 주석 제거본 저장 — **사용자 게이트 ②: 최종 사실 확인** |
 
 전체 오케스트레이션 로직과 각 단계 상세 지침은 `SKILL.md`와 `prompts/`(researcher.md,
@@ -67,9 +71,10 @@ interviewer.md, style-analyst.md, writer.md, reviewer.md, ai-tells.md)에 있습
 
 ### 3. 사용자 게이트 2곳
 
-- **경험카드 승인 (Phase 2 종료 시)**: 인터뷰로 구조화한 경험카드 중 최소 1개 이상을
-  사용자가 직접 확인·승인(`user_confirmed: true`)해야 Writer 단계로 넘어갑니다. 이
-  게이트를 통과하지 못한 경험은 자소서에 쓰이지 않습니다.
+- **카드 승인 (Phase 2 종료 시)**: 인터뷰로 구조화한 경험카드(EXP)와 회사 접점
+  카드(FIT) 중 최소 1개 이상을 사용자가 직접 확인·승인(`user_confirmed: true`)해야
+  Writer 단계로 넘어갑니다. 이 게이트를 통과하지 못한 경험·접점은 자소서에 쓰이지
+  않습니다.
 - **최종 사실 확인 (Phase 6 종료 시)**: 산출 직전, `review-v{final}.md`에 정리된
   INTERPRETIVE(해석·추론) 문장 목록을 사용자에게 보여주고 "모든 문장이 실제로 한
   일이거나 할 법한 말이 맞는지"를 확인받습니다. 이 확인 없이는 완료 처리하지 않습니다.
