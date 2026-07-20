@@ -21,3 +21,13 @@ def test_claim_comments_stripped():
         full = "\n".join(p.text for p in docx.Document(out).paragraphs)
         assert "c:DIRECT" not in full
         assert "사용자 인터뷰를 진행했습니다." in full
+
+def test_multiline_paragraph_not_split():
+    import docx
+    md = "## 문항 1. 지원동기\n첫 줄과\n둘째 줄이 한 문단.\n\n새 문단."
+    with tempfile.TemporaryDirectory() as d:
+        out = f"{d}/o.docx"
+        md_to_docx(md, out)
+        paras = [p.text for p in docx.Document(out).paragraphs
+                 if p.text and not p.style.name.startswith("Heading")]
+        assert paras == ["첫 줄과 둘째 줄이 한 문단.", "새 문단."]

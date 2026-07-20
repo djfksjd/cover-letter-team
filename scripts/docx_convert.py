@@ -1,4 +1,4 @@
-"""md → docx 변환 + 재추출 대조. 스마트따옴표·줄바꿈 깨짐을 변환 시점에 잡는다."""
+"""md → docx 변환 + 재추출 텍스트 대조 검증."""
 import re
 import sys
 
@@ -13,15 +13,32 @@ def _clean_md(md_text: str) -> str:
 
 def md_to_docx(md_text: str, out_path: str) -> None:
     doc = docx.Document()
-    for line in _clean_md(md_text).splitlines():
-        line = line.rstrip()
-        if not line:
+    cleaned = _clean_md(md_text)
+
+    # Split by blank lines to get paragraph blocks
+    for block in cleaned.split('\n\n'):
+        lines = [line.rstrip() for line in block.splitlines() if line.strip()]
+        if not lines:
             continue
-        m = re.match(r"^(#+) (.*)$", line)
-        if m:
-            doc.add_heading(m.group(2), level=min(len(m.group(1)), 4))
-        else:
-            doc.add_paragraph(line)
+
+        # Process each line in the block
+        para_lines = []
+        for line in lines:
+            m = re.match(r"^(#+) (.*)$", line)
+            if m:
+                # Heading: flush accumulated paragraph first, then add heading
+                if para_lines:
+                    doc.add_paragraph(' '.join(para_lines))
+                    para_lines = []
+                doc.add_heading(m.group(2), level=min(len(m.group(1)), 4))
+            else:
+                # Accumulate non-heading lines
+                para_lines.append(line)
+
+        # Add accumulated paragraph at end of block
+        if para_lines:
+            doc.add_paragraph(' '.join(para_lines))
+
     doc.save(out_path)
 
 
@@ -33,7 +50,7 @@ def verify_roundtrip(md_text: str, docx_path: str) -> bool:
     body = re.sub(r"^#+ .*$", "", _clean_md(md_text), flags=re.MULTILINE)
     extracted = "\n".join(
         p.text for p in docx.Document(docx_path).paragraphs
-        if p.style.name.startswith("Normal") or not p.style.name.startswith("Heading")
+        if not p.style.name.startswith("Heading")
     )
     return _normalize(body) == _normalize(extracted)
 
