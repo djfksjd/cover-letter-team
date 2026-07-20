@@ -3,6 +3,8 @@ import re
 import statistics
 import sys
 
+from charcount import CLAIM_RE
+
 RULES = [
     ("em-dash", re.compile(r"[—–]")),
     ("세미콜론", re.compile(r";")),
@@ -32,6 +34,7 @@ def find_issues(text: str) -> list:
 
 
 def sentence_length_stats(text: str) -> dict:
+    text = CLAIM_RE.sub("", text)
     sents = [s for s in SENT_SPLIT.split(text.strip()) if s]
     lens = [len(s) for s in sents]
     if len(lens) < 2:

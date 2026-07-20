@@ -21,6 +21,11 @@ def test_sentence_stats():
     s = sentence_length_stats("짧다. 이 문장은 조금 더 길게 이어집니다. 끝.")
     assert s["stdev"] > 0
 
+def test_sentence_stats_ignore_claim_comments():
+    plain = "짧다. 이 문장은 조금 더 길게 이어집니다. 끝."
+    annotated = "짧다.<!--c:DIRECT:EXP-01--> 이 문장은 조금 더 길게 이어집니다.<!--c:PARAPHRASE:EXP-02--> 끝."
+    assert sentence_length_stats(annotated) == sentence_length_stats(plain)
+
 def test_symmetric_phrase_allowed_once():
     assert not any(i["rule"] == "대칭구문" for i in find_issues("협업뿐만 아니라 기록도 챙겼습니다."))
 
