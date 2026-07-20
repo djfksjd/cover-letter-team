@@ -1,0 +1,16 @@
+# 설계·계획 문서는 로컬 전용 (사용자 방침)
+docs/superpowers/
+
+# 사용자 작업물 방어선
+workspace/
+output/
+*.docx
+*.hwpx
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS
+.DS_Store
