@@ -16,11 +16,18 @@ SENT_SPLIT = re.compile(r"(?<=[.!?다요])\s+")
 
 def find_issues(text: str) -> list:
     issues = []
+    symmetric_hits = []
     for n, line in enumerate(text.splitlines() or [text], 1):
         for rule, rx in RULES:
             m = rx.search(line)
             if m:
-                issues.append({"line": n, "rule": rule, "match": m.group()})
+                if rule == "대칭구문":
+                    # 문서 전체 누적 2회 이상일 때만 보고 (1회는 허용, ai-tells.md 참고)
+                    symmetric_hits.append({"line": n, "rule": rule, "match": m.group()})
+                else:
+                    issues.append({"line": n, "rule": rule, "match": m.group()})
+    if len(symmetric_hits) >= 2:
+        issues.extend(symmetric_hits)
     return issues
 
 

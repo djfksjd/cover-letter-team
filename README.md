@@ -13,7 +13,8 @@
 2. **경험카드·claim-map으로 날조 차단** — 인터뷰에서 확정한 경험은 `experience-cards.yaml`로
    고정되고, 사용자가 승인(`user_confirmed: true`)한 카드만 채택됩니다. Writer가
    쓰는 모든 문장은 `<!--c:LABEL:EXP-NN-->` 형식의 claim 주석으로 경험카드에 연결되며,
-   `claim_check.py`가 근거 없는 문장(날조)을 기계적으로 잡아냅니다.
+   `claim_check.py`가 claim 주석이 달린 모든 주장의 근거 무결성을 기계 검증합니다
+   (주석 자체가 누락되지 않았는지는 Reviewer가 검증 3에서 직접 확인합니다).
 3. **2계층 AI 티 검증 + 문체 신뢰도** — 표면적 AI 말투(surface_check.py)와 내용
    신호(리뷰어의 3중 검증: AI 티 / 인사담당자 페르소나 / 근거 검증) 두 계층으로
    점검합니다. 동시에 Style Analyst가 사용자의 문체 샘플을 분석해 `style_confidence`를

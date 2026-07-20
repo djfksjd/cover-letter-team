@@ -20,3 +20,10 @@ def test_clean_text_passes():
 def test_sentence_stats():
     s = sentence_length_stats("짧다. 이 문장은 조금 더 길게 이어집니다. 끝.")
     assert s["stdev"] > 0
+
+def test_symmetric_phrase_allowed_once():
+    assert not any(i["rule"] == "대칭구문" for i in find_issues("협업뿐만 아니라 기록도 챙겼습니다."))
+
+def test_symmetric_phrase_flagged_twice():
+    text = "협업뿐만 아니라 기록도 챙겼습니다.\n단순히 속도가 아니라 방향을 봤습니다."
+    assert sum(1 for i in find_issues(text) if i["rule"] == "대칭구문") == 2
