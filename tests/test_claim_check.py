@@ -34,3 +34,44 @@ def test_unknown_id_is_flagged():
     errs = check_claims("동아리를 이끌었습니다.<!--c:DIRECT:EXP-99-->",
                         parse_card_ids(CARDS))
     assert any("EXP-99" in e for e in errs)
+
+RSH = """- id: RSH-01
+  verified: true
+- id: RSH-02
+  verified: false"""
+
+FIT = """- id: FIT-01
+  user_confirmed: true
+- id: FIT-02
+  user_confirmed: false"""
+
+def test_parse_evidence_ids():
+    from claim_check import parse_evidence_ids
+    assert parse_evidence_ids(RSH) == {"RSH-01": True, "RSH-02": False}
+
+def test_parse_fit_ids():
+    from claim_check import parse_fit_ids
+    assert parse_fit_ids(FIT) == {"FIT-01": True, "FIT-02": False}
+
+def test_verified_rsh_claim_passes():
+    from claim_check import parse_evidence_ids
+    cards = {**parse_card_ids(CARDS), **parse_evidence_ids(RSH)}
+    assert check_claims("이 회사는 신입 기획자 멘토링 제도를 운영합니다.<!--c:DIRECT:RSH-01-->",
+                        cards) == []
+
+def test_unverified_rsh_is_flagged():
+    from claim_check import parse_evidence_ids
+    cards = {**parse_card_ids(CARDS), **parse_evidence_ids(RSH)}
+    errs = check_claims("이 회사는 업계 1위입니다.<!--c:DIRECT:RSH-02-->", cards)
+    assert any("RSH-02" in e and "미검증" in e for e in errs)
+
+def test_unconfirmed_fit_is_flagged():
+    from claim_check import parse_fit_ids
+    cards = {**parse_card_ids(CARDS), **parse_fit_ids(FIT)}
+    errs = check_claims("입사 후 온보딩 개선을 맡고 싶습니다.<!--c:INTERPRETIVE:FIT-02-->", cards)
+    assert any("FIT-02" in e for e in errs)
+
+def test_rsh_id_without_evidence_file_is_flagged():
+    errs = check_claims("이 회사는 멘토링 제도를 운영합니다.<!--c:DIRECT:RSH-01-->",
+                        parse_card_ids(CARDS))
+    assert any("RSH-01" in e for e in errs)
