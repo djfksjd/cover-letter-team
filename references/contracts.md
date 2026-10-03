@@ -230,3 +230,29 @@ file_reviews:
 파일 조건이 없고 file_reviews가 비었으면 새 DOCX를 만들며 layout_status는 requires_visual_check다.
 PDF/HWP 같은 다른 요구 형식은 자동 지원한다고 주장하지 않는다. 외부 변환/검토 절차가
 확보되기 전 지원 형식으로 제출 가능하다고 표시하지 않는다.
+
+
+## 내용 완성도 심사 기록 (필수)
+
+사실·형식 PASS만으로 글이 풍부하다고 판정하지 않는다. review-vN.yaml에 모든 Q별로
+다음 구조를 추가한다. rating은 STRONG/ADEQUATE/THIN/NOT_READY, 평가 기준은
+[content-quality](content-quality.md)를 따른다.
+
+```yaml
+content_reviews:
+  - id: Q-01
+    rating: ADEQUATE
+    assessment: Actual sentence-specific assessment of depth and evaluable information.
+    evidence_claim_ids: [CLM-001]
+    blocking_gaps: []
+    improvement_opportunities:
+      - missing_information: Actual additional process detail, if available.
+        resolution_owner: user
+        reason: Explain how it would improve assessment without becoming an invented official requirement.
+        suggested_question: Ask about the actual detail without suggesting an answer.
+```
+
+THIN/NOT_READY와 비어 있지 않은 blocking_gaps는 최종 산출을 차단한다. 사실은 있지만
+능력을 평가할 핵심 정보가 없으면 내용 보충 인터뷰가 필요하다. ADEQUATE는 기본 수준이며
+최고 품질을 의미하지 않는다. 최종 사용자 확인에 내용 등급·개선 여지를 함께 보여준다.
+검사 revision 2.2는 이전 리뷰/승인을 무효화하며 새 내용 심사를 요구한다.

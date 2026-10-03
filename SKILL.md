@@ -78,6 +78,12 @@ python3 SKILL_DIR/scripts/validate_application.py APPLICATION_DIR --draft worksp
 
 ## 5. 리뷰와 재작성
 
+[엄격한 내용 완성도](references/content-quality.md)를 별도로 심사한다. 문항과 제출
+본문을 먼저 읽고 카드와 대조해 STRONG/ADEQUATE/THIN/NOT_READY를 기록한다. 사실·형식
+PASS는 풍부함 PASS가 아니다. THIN/NOT_READY나 차단 갭이 있으면 필요한 실제 정보만
+확인하거나 다른 승인 소재로 바꾼다. ADEQUATE는 기본 완성이라고 설명한다.
+
+
 명시된 페이지 수·DOCX 파일 조건 검토가 필요하면 `requirements.submission.file_review_required: true`로 기록한다.
 최종 확인 전에 다음으로 workspace에 **미승인 검토용 미리보기**를 만든다. output에는 쓰지 않는다.
 
@@ -105,7 +111,7 @@ python3 SKILL_DIR/scripts/validate_application.py APPLICATION_DIR --draft worksp
 
 ## 6. 확인 후 내보내기
 
-리뷰가 통과하면 본문 전체·해석/포부·수치/역할·변경 사항을 사용자에게 보여준다. 실제 확인을 받은 후에만 `final-approval.yaml`에 해당 입력·리뷰·본문 해시를 기록한다. 기존 확인을 재사용할 수 있는 것은 해시가 같을 때뿐이다.
+리뷰가 통과하면 본문 전체·문항별 내용 등급과 개선 여지·해석/포부·수치/역할·변경 사항을 사용자에게 보여준다. 실제 확인을 받은 후에만 `final-approval.yaml`에 해당 입력·리뷰·본문 해시를 기록한다. 기존 확인을 재사용할 수 있는 것은 해시가 같을 때뿐이다.
 
 ```bash
 python3 SKILL_DIR/scripts/export_application.py APPLICATION_DIR --draft workspace/draft-v1.md --review workspace/review-v1.yaml --approval workspace/final-approval.yaml

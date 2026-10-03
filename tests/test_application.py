@@ -422,3 +422,65 @@ def test_coverage_cannot_reference_approval_as_evidence(tmp_path):
     plan["coverage"][0]["references"][0]["field"] = "user_confirmed"
     put(root, "evidence-plan.yaml", plan)
     assert not validate(root)["ok"]
+
+
+@pytest.mark.parametrize("rating", ["THIN", "NOT_READY"])
+def test_factual_and_format_pass_cannot_export_thin_content(tmp_path, rating):
+    root = make_application(tmp_path)
+    review_and_approve(root)
+    review = get(root, "review-v1.yaml")
+    review["content_reviews"][0]["rating"] = rating
+    review["content_reviews"][0]["blocking_gaps"] = [
+        {
+            "missing_information": "Actual checklist contents and selection basis are unknown.",
+            "resolution_owner": "user",
+            "reason": "The action label alone does not show the assessed skill.",
+        }
+    ]
+    put(root, "review-v1.yaml", review)
+    approval = get(root, "final-approval.yaml")
+    approval["review_hash"] = digest(review)
+    put(root, "final-approval.yaml", approval)
+    result = export(root, DRAFT, REVIEW, APPROVAL)
+    assert not result["ok"] and "content too thin" in result["errors"][0]
+    assert not (root / "output").exists()
+
+
+def test_missing_content_quality_review_blocks(tmp_path):
+    root = make_application(tmp_path)
+    review_and_approve(root)
+    review = get(root, "review-v1.yaml")
+    del review["content_reviews"]
+    put(root, "review-v1.yaml", review)
+    assert not validate(root, DRAFT, REVIEW)["ok"]
+
+
+def test_adequate_with_improvements_is_not_reported_as_strong(tmp_path):
+    root = make_application(tmp_path)
+    review_and_approve(root)
+    review = get(root, "review-v1.yaml")
+    review["content_reviews"][0]["improvement_opportunities"] = [
+        {
+            "missing_information": "Optional richer process detail.",
+            "resolution_owner": "user",
+            "reason": "Could distinguish the experience but not required for this narrow fixture question.",
+        }
+    ]
+    put(root, "review-v1.yaml", review)
+    result = validate(root, DRAFT, REVIEW)
+    assert result["ok"] and result["content_quality"] == {"Q-01": "ADEQUATE"}
+
+
+def test_adequate_rating_cannot_hide_blocking_content_gap(tmp_path):
+    root = make_application(tmp_path)
+    review_and_approve(root)
+    review = get(root, "review-v1.yaml")
+    review["content_reviews"][0]["blocking_gaps"] = [
+        {
+            "missing_information": "Unresolved actual action.",
+            "resolution_owner": "user",
+            "reason": "Rating alone cannot override an open required clarification.",
+        }
+    ]
+    put(root, "review-v1.yaml", review)
+    assert not validate(root, DRAFT, REVIEW)["ok"]

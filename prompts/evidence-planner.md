@@ -18,3 +18,12 @@ UNKNOWN/MISSING/CONTRADICTORY/WEAKLY_SUPPORTED/NOT_APPLICABLE/NO_ACTUAL_EXPERIEN
 
 readiness_check.py의 결과는 필수 매핑/승인/필드 검사와 기록된 충분성 판단이다.
 그것을 객관적 합격 점수라고 설명하지 않는다. 이후 Reviewer가 본문 커버리지를 별도로 검토한다.
+
+
+## 정보량과 내용 충분성
+
+[내용 완성도](../references/content-quality.md) 기준으로 ‘행동 이름 있음’과 실제 능력을
+평가할 정보가 있음을 구분한다. 문항이 관련 행동을 설명하라고 하면 문제/실제 행동 내용/
+선택 이유/관찰 결과에서 평가에 필요한 핵심이 빠졌는지 판단한다. 체크리스트 작성+팀 사용
+두 문장만으로는 어떤 문제/내용/판단인지 불명일 수 있다. 필요한 핵심을 WEAKLY_SUPPORTED로
+기록하고 실제 정보만 질문한다. 공식 최소 분량이나 모든 문항 공통 필드로 강제하지 않는다.

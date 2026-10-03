@@ -170,6 +170,16 @@ def review_and_approve(root):
                 "rationale": "Team outcome covered.",
             },
         ],
+        "content_reviews": [
+            {
+                "id": "Q-01",
+                "rating": "ADEQUATE",
+                "assessment": "Synthetic contract fixture: exact short action/outcome request covered. Not a real hiring-quality evaluation.",
+                "evidence_claim_ids": [c["id"] for c in claims],
+                "blocking_gaps": [],
+                "improvement_opportunities": [],
+            }
+        ],
         "quality_checks": {
             k: {
                 "verdict": "PASS",
