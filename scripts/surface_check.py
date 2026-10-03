@@ -1,7 +1,9 @@
-"""AI 티 표면 검사(계층 1). 필요조건 게이트일 뿐 충분조건이 아니다 — 내용 검사는 reviewer.md."""
+"""Advisory style checks; never an AI detector or an automatic rejection gate."""
+
 import re
 import statistics
 import sys
+from pathlib import Path
 
 from charcount import CLAIM_RE
 
@@ -16,11 +18,14 @@ RULES = [
 SENT_SPLIT = re.compile(r"(?<=[.!?다요])\s+")
 
 
-def find_issues(text: str) -> list:
+def find_issues(text: str, language: str = "ko") -> list:
+    text = CLAIM_RE.sub("", text)
     issues = []
     symmetric_hits = []
     for n, line in enumerate(text.splitlines() or [text], 1):
         for rule, rx in RULES:
+            if not language.startswith("ko") and rule != "em-dash":
+                continue
             m = rx.search(line)
             if m:
                 if rule == "대칭구문":
@@ -42,17 +47,16 @@ def sentence_length_stats(text: str) -> dict:
     return {"mean": statistics.mean(lens), "stdev": statistics.stdev(lens)}
 
 
-def main(path: str) -> int:
-    text = open(path, encoding="utf-8").read()
-    issues = find_issues(text)
+def main(path: str, language: str = "ko") -> int:
+    text = Path(path).read_text(encoding="utf-8")
+    issues = find_issues(text, language)
     stats = sentence_length_stats(text)
     for i in issues:
         print(f"L{i['line']} [{i['rule']}] {i['match']}")
     print(f"문장 길이 평균 {stats['mean']:.0f}자, 표준편차 {stats['stdev']:.0f}")
-    if stats["stdev"] < 8 and stats["mean"] > 0:
-        print("경고: 문장 길이가 지나치게 균일함 (리듬 균일 신호)")
-    return 1 if issues else 0
+    print("Advisory only: punctuation/rhythm do not establish AI authorship or submission failure.")
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1]))
+    sys.exit(main(*sys.argv[1:3]))
