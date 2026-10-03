@@ -14,3 +14,7 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Local virtual environments and export preview artifacts
+.venv/
+preview/

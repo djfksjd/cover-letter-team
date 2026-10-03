@@ -1,4 +1,7 @@
-import sys, pathlib, tempfile
+import sys
+import pathlib
+import tempfile
+
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "scripts"))
 from docx_convert import md_to_docx, verify_roundtrip
 
@@ -7,14 +10,17 @@ MD = """## 문항 1. 지원동기
 
 두 번째 문단입니다."""
 
+
 def test_roundtrip():
     with tempfile.TemporaryDirectory() as d:
         out = f"{d}/o.docx"
         md_to_docx(MD, out)
         assert verify_roundtrip(MD, out)
 
+
 def test_claim_comments_stripped():
     import docx
+
     with tempfile.TemporaryDirectory() as d:
         out = f"{d}/o.docx"
         md_to_docx(MD, out)
@@ -22,12 +28,35 @@ def test_claim_comments_stripped():
         assert "c:DIRECT" not in full
         assert "사용자 인터뷰를 진행했습니다." in full
 
+
 def test_multiline_paragraph_not_split():
     import docx
+
     md = "## 문항 1. 지원동기\n첫 줄과\n둘째 줄이 한 문단.\n\n새 문단."
     with tempfile.TemporaryDirectory() as d:
         out = f"{d}/o.docx"
         md_to_docx(md, out)
-        paras = [p.text for p in docx.Document(out).paragraphs
-                 if p.text and not p.style.name.startswith("Heading")]
+        paras = [
+            p.text
+            for p in docx.Document(out).paragraphs
+            if p.text and not p.style.name.startswith("Heading")
+        ]
         assert paras == ["첫 줄과 둘째 줄이 한 문단.", "새 문단."]
+
+
+def test_roundtrip_detects_lost_or_modified_heading(tmp_path):
+    import docx
+
+    path = tmp_path / "o.docx"
+    md_to_docx(MD, str(path))
+    document = docx.Document(path)
+    document.paragraphs[0].text = "Wrong question"
+    document.save(path)
+    assert not verify_roundtrip(MD, str(path))
+
+
+def test_crlf_roundtrip(tmp_path):
+    path = tmp_path / "o.docx"
+    text = MD.replace("\n", "\r\n")
+    md_to_docx(text, str(path))
+    assert verify_roundtrip(text, str(path))
