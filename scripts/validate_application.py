@@ -330,6 +330,37 @@ def _review(review, app_id, input_hash, claims, questions):
         ):
             raise ValueError(f"{key}: component evidence outside question/nonfactual")
         _text(row.get("rationale"), f"{key}.rationale")
+    content_reviews = _unique_rows(review.get("content_reviews"), "content_reviews")
+    if set(content_reviews) != set(questions):
+        raise ValueError("Content quality review must cover every question")
+    for qid, row in content_reviews.items():
+        if row.get("rating") not in {"STRONG", "ADEQUATE", "THIN", "NOT_READY"}:
+            raise ValueError(f"{qid}: invalid content quality rating")
+        _text(row.get("assessment"), f"{qid}.content assessment")
+        ids = row.get("evidence_claim_ids")
+        if (
+            not isinstance(ids, list)
+            or not ids
+            or any(
+                i not in claims
+                or claims[i]["question_id"] != qid
+                or claims[i]["label"] == "NONFACTUAL"
+                for i in ids
+            )
+        ):
+            raise ValueError(f"{qid}: content review needs actual claim evidence in this question")
+        gaps = row.get("blocking_gaps")
+        opportunities = row.get("improvement_opportunities")
+        if not isinstance(gaps, list) or not isinstance(opportunities, list):
+            raise ValueError(f"{qid}: content gaps/opportunities must be explicit lists")
+        for item in gaps + opportunities:
+            _object(item, "content gap")
+            for key in ["missing_information", "resolution_owner", "reason"]:
+                _text(item.get(key), f"content gap.{key}")
+        if row["rating"] in {"THIN", "NOT_READY"} or gaps:
+            raise ValueError(
+                f"{qid}: content too thin or not ready; clarify evidence before export"
+            )
     checks = _object(review.get("quality_checks"), "quality_checks")
     if set(checks) != QUALITY_CHECKS:
         raise ValueError("Review must address all quality dimensions")
@@ -387,7 +418,7 @@ def validate(root, draft="workspace/draft-v1.md", review=None, approval=None):
         claims = _claim_map(claim_map, spans, cards, app_id)
         input_hash = digest(
             {
-                "validator_revision": "2.1-rendered-submission",
+                "validator_revision": "2.2-content-quality",
                 "config": config,
                 "requirements": requirements,
                 "cards": cards,
@@ -448,6 +479,9 @@ def validate(root, draft="workspace/draft-v1.md", review=None, approval=None):
             "counts": counts,
             "claim_hashes": {key: digest(row) for key, row in claims.items()},
             "review_hash": digest(review_data) if review_data else None,
+            "content_quality": {row["id"]: row["rating"] for row in review_data["content_reviews"]}
+            if review_data
+            else None,
             "limitations": [
                 "Semantic truth relies on source-based Reviewer and applicant confirmation.",
                 "Word/byte counts approximate the portal unless verified; file layout needs visual review.",

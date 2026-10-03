@@ -21,7 +21,7 @@
 깨끗한 임시 가상환경에서 requirements-dev.txt로 설치해 확인했다.
 
 ```text
-python -m pytest -q                         105 passed
+python -m pytest -q                         110 passed
 python -m ruff check scripts tests          All checks passed!
 python -m ruff format --check scripts tests  20 files already formatted
 skill-creator/scripts/quick_validate.py .   Skill is valid!
@@ -82,3 +82,29 @@ v2 파일을 작성하고 스크립트/리뷰/합성 승인/산출까지 실행�
 - DOCX 텍스트/제목 roundtrip은 시각 레이아웃 검증과 다르다. 명시 파일 조건에는 preview+file review를 사용한다.
 - 영어 외 언어의 현지 관례·공식 작성 안내는 추가 확인하며 미국식 편지를 자동 적용하지 않는다.
 - 지원 사이트 제출·이메일 발송은 수행하지 않는다. 공개 Git에는 지원자 파일/합성 승인 작업 폴더를 넣지 않는다.
+
+
+## 후속 엄격 심사 (내용 완성도 보완)
+
+별도 심사 에이전트가 기존 review/보고서/작성자의 설명 없이 문항과 본문을 먼저 읽고,
+그 뒤 카드와 대조했다. 기존 한국어 403자는 ADEQUATE, 영어 32단어는 THIN으로 평가했다.
+영어는 사실·형식이 정확해도 실제 문제·체크리스트 내용·선택 근거가 없어 수행 능력을
+평가할 정보가 부족했다. 한국어는 기본 답변은 완성됐으나 합의 과정의 디테일이 개선 여지다.
+따라서 이전 PASS를 최고 품질이나 풍부함 PASS로 해석해서는 안 된다.
+
+content_reviews를 필수 계약으로 추가했다. 모든 문항의 STRONG/ADEQUATE/THIN/NOT_READY,
+실제 claim 근거, assessment, blocking_gaps, improvement_opportunities를 기록한다.
+THIN/NOT_READY 또는 열린 차단 갭은 기존 factual/format PASS와 무관하게 export를 막는다.
+실제 기존 32단어 사례에 독립 THIN 판단을 적용해 DRAFT_WITH_ISSUES와 산출 차단을 확인했다.
+검사 revision 2.2는 이전 리뷰·승인을 무효화한다. 회귀 검사는 110개 통과했다.
+
+새 별도 합성 사례에는 원래 사용자에게서 얻지 않은 사실을 이전 경험으로 추가한 것이
+아니라, 처음부터 더 풍부한 가상 원자료를 제공했다. 인수인계 문제, 실제 네 개 항목,
+중복 항목 제외 이유, 피드백 수정, 팀장의 도입 결정, 세 차례 직접 사용/원본 대조를
+156단어로 작성했다. 작성자의 자체 평가는 STRONG이었으나 별도 문항/본문 우선 심사에서는
+ADEQUATE였다. 최종 기록은 더 보수적인 ADEQUATE를 채택했고 근거 있는 디테일과 좁은
+결과 범위, 반복/마무리의 개선 여지를 공개했다. 실제 최종 사용자 승인/export/제출은 없다.
+
+이 검증은 충분한 사실로 정보량을 높일 수 있으며 빈약한 글은 보충 확인으로 돌려야 함을
+확인한다. 모든 결과가 최고 품질임을 보증하거나 더 높은 등급을 얻으려고 사실·숫자를
+추가해서는 안 된다. 최신 정책은 references/content-quality.md를 따른다.
