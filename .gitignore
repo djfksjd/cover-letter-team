@@ -18,3 +18,31 @@ __pycache__/
 # Local virtual environments and export preview artifacts
 .venv/
 preview/
+
+# ── 비밀값: API 키·토큰·인증서 ──
+.env
+.env.*
+*.env
+*.pem
+*.key
+secrets/
+credentials*
+
+# ── 지원자 개인 자료: 저장소 루트에 지원 건을 두더라도 올라가지 않게 ──
+/assets/
+/job/
+지원_*/
+10_지원건/
+01_기준문서/
+02_증빙서류/
+99_백업/
+*개인정보*
+*.hwp
+*.pdf
+*.tsv
+*.jsonl
+
+# ── 스킬 평가·도구 캐시 ──
+evals/
+*-workspace/
+.ruff_cache/

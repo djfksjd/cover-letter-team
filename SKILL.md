@@ -29,7 +29,7 @@ description: 한국·해외 기업의 자기소개서, 지원 문항, cover lett
 
 [입력·갭 정책](references/intake-and-gaps.md)과 [계약](references/contracts.md)을 읽는다. `docs/lessons.md`는 있으면 참고한다.
 
-먼저 `assets/`, `job/`와 기존 인터뷰를 확인한다. 회사 국적과 채용 국가·법인·직무·작성 언어·문서 유형·경력 수준을 각각 기록한다. 외국계 한국 지사의 한국어 문항에는 한국어 문항 정책을, 한국 기업 해외 법인의 영문 편지에는 해당 국가·영어 편지 정책을 적용한다.
+먼저 `assets/`, `job/`와 기존 인터뷰를 확인한다. `workspace/handoff-from-recommand-jobs.md`가 있으면(연결 엔진이 만든 폴더) 먼저 읽는다 — 공고 원문·요건 인용·경고가 이미 있으므로 다시 조사하지 않고, 문항·분량·제출 방식·AI 정책처럼 빠진 것만 확인한다. 회사 국적과 채용 국가·법인·직무·작성 언어·문서 유형·경력 수준을 각각 기록한다. 외국계 한국 지사의 한국어 문항에는 한국어 문항 정책을, 한국 기업 해외 법인의 영문 편지에는 해당 국가·영어 편지 정책을 적용한다.
 
 - `experience_inventory`: 회사 없이 경험을 정리한다. 기업 입력을 강제하지 않고 제출용 파일을 생성하지 않는다.
 - `general_draft`: 범용 초안. 맞춤 제출 가능이라고 표시하지 않는다.
@@ -99,13 +99,14 @@ python3 SKILL_DIR/scripts/preview_application.py APPLICATION_DIR --draft workspa
 `prompts/reviewer.md`를 따라 각 주장과 필수 하위요소를 근거 필드와 직접 대조한다. 독립 컨텍스트가 허용되면 별도 Reviewer를 사용한다. 같은 컨텍스트면 한계를 공개한다. `review-vN.md`와 `review-vN.yaml`을 작성한다.
 
 ```bash
-python3 SKILL_DIR/scripts/surface_check.py APPLICATION_DIR/workspace/draft-v1.md en
+python3 SKILL_DIR/scripts/surface_check.py APPLICATION_DIR/workspace/draft-v1.md ko   # 출력 언어 코드
+python3 SKILL_DIR/scripts/surface_check.py --compare APPLICATION_DIR/workspace/draft-v1.md APPLICATION_DIR/workspace/draft-v2.md ko
 python3 SKILL_DIR/scripts/dedup_check.py APPLICATION_DIR/workspace/draft-v1.md
 python3 SKILL_DIR/scripts/blind_check.py APPLICATION_DIR/workspace/draft-v1.md
 python3 SKILL_DIR/scripts/validate_application.py APPLICATION_DIR --draft workspace/draft-v1.md --review workspace/review-v1.yaml
 ```
 
-앞의 세 검사는 조언용 후보 탐지다. 문장부호·표현·유사도·PII 의심만으로 자동 HIGH를 주지 않고 실제 정책과 문맥을 대조한다. claim 계약·요건·공식 분량 오류는 차단한다. 내용 판단은 원문 인용·근거·수정 제약을 남기고 취향 차이를 필수 조건으로 만들지 않는다.
+앞의 세 검사는 조언용 후보 탐지다. surface_check의 패턴·밀도 기준은 [자연스러움 후보 패턴](references/naturalness-patterns.md)이며, `--compare`는 재작성이 원문에 없던 상투 패턴을 만들었거나 숫자를 바꿨는지 보여 준다. 문장부호·표현·유사도·PII 의심만으로 자동 HIGH를 주지 않고 실제 정책과 문맥을 대조한다. claim 계약·요건·공식 분량 오류는 차단한다. 내용 판단은 원문 인용·근거·수정 제약을 남기고 취향 차이를 필수 조건으로 만들지 않는다.
 
 소재 부족은 인터뷰, 기업 근거 오류는 리서치, 문체·구성 문제는 Writer로 회송한다. 개선이 없거나 사용자만 답할 모순이면 자동 재작성을 멈춘다. 자동 리뷰 기본 상한 3회는 **PASS 예외가 아니다**. HIGH가 남으면 `DRAFT_WITH_ISSUES` 검토용 초안으로 종료한다.
 
@@ -118,5 +119,19 @@ python3 SKILL_DIR/scripts/export_application.py APPLICATION_DIR --draft workspac
 ```
 
 `APPROVED_FOR_EXPORT`만 `EXPORTED`로 넘어간다. 주석 없는 MD와 DOCX, 승인·본문 해시 manifest를 생성한다. DOCX 텍스트 대조는 레이아웃·페이지 수 검증이 아니다. 한 페이지/파일 형식/크기/업로드 조건이 있으면 실제 파일을 열어 확인하고 포털의 표시 분량과 대조한다. 사용자에게 파일을 제공하며 지원 사이트 제출은 별도 요청 없이는 하지 않는다.
+
+## 7. 마지막 공정: 메타데이터·비가시 문자 정리
+
+제출용 파일(양식 채움 DOCX 포함)이나 Docs 문서를 만들면 **항상 마지막에** 실행한다. [watermarks-remover](https://github.com/guillaumemeyer/watermarks-remover)를 고정 커밋으로 로컬·오프라인 실행해 AI 출처 메타데이터, 문서 속성, 보이지 않는 Unicode 문자를 검사하고 제거한다.
+
+```bash
+python3 SKILL_DIR/scripts/final_scrub.py APPLICATION_DIR                  # output/의 docx·md·txt 전부
+python3 SKILL_DIR/scripts/final_scrub.py APPLICATION_DIR --files 경로...  # 양식 DOCX 등을 지정할 때
+```
+
+- 도구가 없으면 스크립트가 고정 커밋 설치 명령을 알려 주고 멈춘다. 새 커밋으로 바꿀 때는 코드를 읽어 확인한 뒤 `PINNED_COMMIT`을 갱신한다.
+- 보이는 본문이 한 글자라도 바뀌면 원본을 그대로 두고 `BLOCKED`로 보고한다. 원본은 `workspace/backup/*.pre-scrub`에 남기고, 결과는 `export-manifest.json`의 `final_scrub`에 기록한다.
+- Layer B(통계적 텍스트 워터마크 대응 재작성)는 실행하지 않는다. 승인된 본문을 바꾸며 이 스킬의 목표(AI 탐지 회피 아님)와도 맞지 않는다.
+- Docs 문서는 파일이 아니므로, 문서에 넣을 MD를 `--files`로 먼저 정리한 뒤 그 텍스트로 문서를 채운다.
 
 `docs/lessons.md`에는 사용자가 기록을 허용한 추상 운영 교훈만 남긴다. 지원자 문장·사건·회사명·개인정보를 스킬 저장소에 기록하지 않는다.
