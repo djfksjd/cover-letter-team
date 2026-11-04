@@ -118,6 +118,36 @@ DOCX는 텍스트와 제목을 재추출해 대조합니다. 페이지 수·레�
 PDF/HWP 등 다른 요구 형식은 자동 보증하지 않습니다. 해당 조건을 실제 확인하기
 전에는 제출 가능 판정을 하지 않습니다. 파일 생성은 지원 사이트 제출과 다릅니다.
 
+### 자연스러움 후보 점검 (`surface_check.py`)
+
+```bash
+python scripts/surface_check.py APPLICATION_DIR/workspace/draft-v1.md ko          # 후보 목록
+python scripts/surface_check.py APPLICATION_DIR/workspace/draft-v1.md ko --json   # 기계 판독용
+python scripts/surface_check.py --compare workspace/draft-v1.md workspace/draft-v2.md ko
+```
+
+[im-not-ai](https://github.com/epoko77-ai/im-not-ai)(MIT)의 패턴 분류를 자기소개서에 맞게 옮겨 왔습니다.
+"~에 있어서", 이중 피동, "단순한 X를 넘어", 의의 과장, 연결어미 뒤 쉼표 남발 등을 심각도(S1~S3)와 함께 보여 줍니다.
+한 번 쓴 표현은 대부분 정상이라 **반복되거나 한 문단에 몰릴 때만** 후보로 냅니다.
+`--compare`는 고친 글에 원래 없던 패턴이 새로 생겼는지, 숫자가 사라지거나 새로 생겼는지를 보여 줍니다.
+합쇼체의 "~습니다" 반복 검사와 탐지기 점수 최적화는 넣지 않았습니다. 이유는 [naturalness-patterns.md](references/naturalness-patterns.md)에 있습니다.
+
+### 마지막 공정: 메타데이터 정리 (`final_scrub.py`)
+
+```bash
+python scripts/final_scrub.py APPLICATION_DIR
+```
+
+제출 파일에서 AI 출처 메타데이터, 문서 속성, 보이지 않는 Unicode 문자를 지웁니다.
+보이는 본문이 한 글자라도 바뀌면 원본을 그대로 두고 `BLOCKED`로 보고합니다.
+
+### 함께 쓰는 스킬
+
+| 스킬 | 역할 |
+|---|---|
+| [recommand-jobs](https://github.com/djfksjd/recommand-jobs) | 한국 채용공고 수집, 원문 인용으로 자격 판정 |
+| [recommand-jobs-coverletter-fusion-engine](https://github.com/djfksjd/recommand-jobs-coverletter-fusion-engine) | 추천 공고를 이 스킬의 지원 건 폴더로 넘김. 0단계에서 `workspace/handoff-from-recommand-jobs.md`를 먼저 읽음 |
+
 ## 근거 자료
 
 [문체·문항·직무·파일 가이드](references/writing-guide.md),
